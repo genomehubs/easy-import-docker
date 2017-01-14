@@ -1,5 +1,5 @@
 # DOCKER-VERSION 1.12.3
-FROM ens-mirror
+FROM lepbase/easy-mirror
 MAINTAINER  Richard Challis/Lepbase contact@lepbase.org
 
 ENV TERM xterm
@@ -10,6 +10,8 @@ RUN cpanm Tree::DAG_Node \
         IO::Unread \
         Text::LevenshteinXS \
         Math::SigFigs
+
+RUN apt-get update && apt-get install -y parallel
 
 WORKDIR /ensembl
 USER eguser
