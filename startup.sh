@@ -150,7 +150,7 @@ if ! [ $EXPORTSEQ -eq 0 ]; then
   if [ -s exported/${ASSEMBLY}_-_proteins.fa ]; then
     cp exported/${ASSEMBLY}_-_proteins.fa $BLASTDIR
   fi
-  echo "$LIST" | parallel --no-notice "perl -p -i -e 's/^>(\S+)\s(\S+)\s(\S+)/>\${2}__\${3}__\$1/' $BLASTDIR/{}"
+  echo "$LIST" | parallel --no-notice perl -p -i -e '"s/^>(\S+)\s(\S+)\s(\S+)/>\${2}__\${3}__\$1/"' '$BLASTDIR/{}'
   gzip exported/*.fa
   mv exported/*.gz $DOWNLOADDIR/sequence/
   rm -rf exported
