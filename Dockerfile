@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y parallel
 WORKDIR /ensembl
 USER eguser
 ARG cachebuster=0b56f064
-RUN git clone -b develop --recursive https://github.com/lepbase/easy-import
+RUN git clone -b master --recursive https://github.com/lepbase/easy-import
 
 USER root
 RUN mkdir /import
