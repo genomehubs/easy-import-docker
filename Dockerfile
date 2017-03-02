@@ -1,5 +1,5 @@
 # DOCKER-VERSION 1.12.3
-FROM lepbase/easy-mirror
+FROM genomehubs/easy-mirror:latest
 MAINTAINER  Richard Challis/Lepbase contact@lepbase.org
 
 ENV TERM xterm
@@ -15,8 +15,8 @@ RUN apt-get update && apt-get install -y parallel
 
 WORKDIR /ensembl
 USER eguser
-ARG cachebuster=0b56f064
-RUN git clone -b master --recursive https://github.com/lepbase/easy-import
+ARG cachebuster=0b16fe7d
+RUN git clone -b develop --recursive https://github.com/genomehubs/easy-import
 
 USER root
 RUN mkdir /import
@@ -30,5 +30,7 @@ RUN mkdir meta
 RUN mkdir data
 WORKDIR data
 
-#CMD ["/import/startup.sh", $FLAGS, "-d", $DATABASE]
+ENV PERL5LIB $PERL5LIB:/ensembl/easy-import/modules
+ENV PERL5LIB $PERL5LIB:/ensembl/easy-import/gff-parser
+
 CMD /import/startup.sh $FLAGS
