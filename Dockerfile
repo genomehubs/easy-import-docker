@@ -21,7 +21,9 @@ RUN git clone -b develop --recursive https://github.com/genomehubs/easy-import
 USER root
 RUN mkdir /import
 COPY startup.sh /import/
+RUN chown -R eguser /import
 
+USER eguser
 WORKDIR /import
 RUN mkdir blast
 RUN mkdir conf
