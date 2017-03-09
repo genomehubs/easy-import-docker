@@ -107,8 +107,8 @@ if ! [ $IMPORTBLAST -eq 0 ]; then
   if ! [ -s $BLASTPINI ]; then
     # create ini file to fetch result files from download directory
     printf "[FILES]
-  BLASTP = [ BLASTP $DOWNLOADDIR/blastp/${ASSEMBLY}_-_proteins.fa.blastp.uniprot_sprot.1e-10.gz ]
-  IPRSCAN = [ IPRSCAN $DOWNLOADDIR/interproscan/${ASSEMBLY}_-_proteins.fa.interproscan.gz ]
+  BLASTP = [ BLASTP $DOWNLOADDIR/blastp/${ASSEMBLY}.proteins.fa.blastp.uniprot_sprot.1e-10.tsv.gz ]
+  IPRSCAN = [ IPRSCAN $DOWNLOADDIR/interproscan/${ASSEMBLY}.proteins.fa.interproscan.tsv.gz ]
 [XREF]
   BLASTP = [ 2000 Uniprot/swissprot/TrEMBL UniProtKB/TrEMBL ]\n" > $BLASTPINI
   fi
@@ -121,7 +121,7 @@ if ! [ $IMPORTRM -eq 0 ]; then
   RMINI="$CONFDIR/$DATABASE.repeatmasker.ini"
   if ! [ -s $RMINI ]; then
     # create ini file to fetch result files from download directory
-    printf "[FILES]\n  REPEATMASKER = [ txt $DOWNLOADDIR/repeats/${ASSEMBLY}.repeatmasker.out.gz ]\n" > $RMINI
+    printf "[FILES]\n  REPEATMASKER = [ txt $DOWNLOADDIR/repeats/${ASSEMBLY}.scaffolds.fa.repeatmasker.out.gz ]\n" > $RMINI
   fi
   perl $EIDIR/core/import_repeatmasker.pl $INI $RMINI $OVERINI &> >(tee log/import_repeatmasker.err)
 fi
@@ -132,8 +132,8 @@ if ! [ $IMPORTCEG -eq 0 ]; then
   if ! [ -s $CEGINI ]; then
     # create ini file to fetch result files from download directory
     printf "[FILES]
-  CEGMA = [ txt $DOWNLOADDIR/cegma/${ASSEMBLY}_-_cegma.txt ]
-  BUSCO = [ txt $DOWNLOADDIR/busco/${ASSEMBLY}_-_busco.txt ]\n" > $CEGINI
+  CEGMA = [ txt $DOWNLOADDIR/cegma/${ASSEMBLY}.scaffolds.fa.cegma.completeness_report.txt ]
+  BUSCO = [ txt $DOWNLOADDIR/busco/${ASSEMBLY}.scaffolds.fa.busco.short_summary.txt ]\n" > $CEGINI
   fi
   perl $EIDIR/core/import_cegma_busco.pl $DEFAULTINI $INI $CEGINI $OVERINI &> >(tee log/import_cegma_busco.err)
 fi
@@ -145,17 +145,18 @@ if ! [ $EXPORTSEQ -eq 0 ]; then
   fi
   perl $EIDIR/core/export_sequences.pl $DEFAULTINI $INI $OVERINI &> >(tee log/export_sequences.err)
   cd exported
-  LIST=`ls ${ASSEMBLY}_-_{scaffolds,cds,proteins}.fa`
+  LIST=`ls ${ASSEMBLY}.{scaffolds,cds,proteins}.fa`
   echo "$LIST"
   cd ../
-  cp exported/${ASSEMBLY}_-_scaffolds.fa $BLASTDIR
-  if [ -s exported/${ASSEMBLY}_-_cds.fa ]; then
-    cp exported/${ASSEMBLY}_-_cds.fa $BLASTDIR
+  cp exported/${ASSEMBLY}.scaffolds.fa $BLASTDIR
+  if [ -s exported/${ASSEMBLY}.cds.fa ]; then
+    cp exported/${ASSEMBLY}.cds.fa $BLASTDIR
   fi
-  if [ -s exported/${ASSEMBLY}_-_proteins.fa ]; then
-    cp exported/${ASSEMBLY}_-_proteins.fa $BLASTDIR
+  if [ -s exported/${ASSEMBLY}.proteins.fa ]; then
+    cp exported/${ASSEMBLY}.proteins.fa $BLASTDIR
   fi
   echo "$LIST" | parallel perl -p -i -e '"s/^>(\S+)\s(\S+)\s(\S+)/>\${2}__\${3}__\$1/"' $BLASTDIR/{}
+  rename "s/.scaffolds./_scaffolds./; s/.cds./_cds./; s/.proteins./_proteins./" $BLASTDIR/*.{scaffolds,cds,proteins}.fa
   gzip exported/*.fa
   mv exported/*.gz $DOWNLOADDIR/sequence/
   rm -rf exported
