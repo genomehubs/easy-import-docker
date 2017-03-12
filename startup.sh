@@ -15,11 +15,12 @@ IMPORTRM=0
 IMPORTCEG=0
 EXPORTJSON=0
 EXPORTSEQ=0
+EXPORTEMBL=0
 INDEX=0
 DEFAULTINI="$CONFDIR/default.ini"
 OVERINI="$CONFDIR/overwrite.ini"
 
-while getopts "spgvbrcjeid:o:" OPTION
+while getopts "spgvbrcjeiEd:o:" OPTION
 do
   case $OPTION in
     s)  IMPORTSEQ=1;;      # import_sequences.pl
@@ -31,6 +32,7 @@ do
     c)  IMPORTCEG=1;;      # import_cegma_busco.pl
     e)  EXPORTSEQ=1;;      # export_sequences.pl
     j)  EXPORTJSON=1;;     # export_json.pl
+    E)  EXPORTEMBL=1;;     # export_embl.pl
     i)  INDEX=1;;          # index_database.pl
     d)  DATABASE=$OPTARG;; # core database name
   esac
@@ -123,7 +125,7 @@ if ! [ $IMPORTRM -eq 0 ]; then
     # create ini file to fetch result files from download directory
     printf "[FILES]\n  REPEATMASKER = [ txt $DOWNLOADDIR/repeats/${ASSEMBLY}.scaffolds.fa.repeatmasker.out.gz ]\n" > $RMINI
   fi
-  perl $EIDIR/core/import_repeatmasker.pl $INI $RMINI $OVERINI &> >(tee log/import_repeatmasker.err)
+  perl $EIDIR/core/import_repeatmasker.pl $DEFAULTINI $INI $RMINI $OVERINI &> >(tee log/import_repeatmasker.err)
 fi
 
 if ! [ $IMPORTCEG -eq 0 ]; then
@@ -159,7 +161,7 @@ if ! [ $EXPORTSEQ -eq 0 ]; then
   rename "s/.scaffolds./_scaffolds./; s/.cds./_cds./; s/.proteins./_proteins./" $BLASTDIR/*.{scaffolds,cds,proteins}.fa
   gzip exported/*.fa
   mv exported/*.gz $DOWNLOADDIR/sequence/
-  rm -rf exported
+#  rm -rf exported
 fi
 
 if ! [ $EXPORTJSON -eq 0 ]; then
@@ -176,6 +178,18 @@ if ! [ $EXPORTJSON -eq 0 ]; then
   mv web/*.assembly-stats.json $DOWNLOADDIR/json/assemblies
   mv web/*.meta.json $DOWNLOADDIR/json/meta
   rm -rf web
+fi
+
+if ! [ $EXPORTEMBL -eq 0 ]; then
+  echo "exporting embl"
+  if ! [ -d $DOWNLOADDIR/embl ]; then
+    mkdir -p $DOWNLOADDIR/embl
+  fi
+  perl $EIDIR/core/export_embl.pl $DEFAULTINI $INI $OVERINI &> >(tee log/export_embl.err)
+  gzip exported/*.embl
+  mv exported/*.gz $DOWNLOADDIR/embl/
+  rm -rf exported
+  echo "done"
 fi
 
 if ! [ $INDEX -eq 0 ]; then

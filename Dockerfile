@@ -35,4 +35,6 @@ WORKDIR data
 ENV PERL5LIB $PERL5LIB:/ensembl/easy-import/modules
 ENV PERL5LIB $PERL5LIB:/ensembl/easy-import/gff-parser
 
+COPY export_embl.pl /ensembl/easy-import/core/
+
 CMD /import/startup.sh $FLAGS
