@@ -64,42 +64,36 @@ if ! [ -s $OVERINI ]; then
   OVERINI=
 fi
 
+if ! [ -z $INI ]; then
+  OVERINI="$CONFDIR/$INI $OVERINI"
+fi
+
 # check main ini file exists
 if ! [ -s $CONFDIR/$DATABASE.ini ]; then
   perl $EIDIR/core/generate_conf_ini.pl $DATABASE $DEFAULTINI $OVERINI
 fi
-INI=$CONFDIR/$DATABASE.ini
-DISPLAY_NAME=$(awk -F "=" '/SPECIES.DISPLAY_NAME/ {print $2}' $INI | perl -pe 's/^\s*// and s/\s*$// and s/\s/_/g')
-ASSEMBLY=${DISPLAY_NAME}_$(awk -F "=" '/ASSEMBLY.DEFAULT/ {print $2}' $INI | perl -pe 's/^\s*// and s/\s*$// and s/\s/_/g')
+DBINI=$CONFDIR/$DATABASE.ini
+DISPLAY_NAME=$(awk -F "=" '/SPECIES.DISPLAY_NAME/ {print $2}' $DBINI | perl -pe 's/^\s*// and s/\s*$// and s/\s/_/g')
+ASSEMBLY=${DISPLAY_NAME}_$(awk -F "=" '/ASSEMBLY.DEFAULT/ {print $2}' $DBINI | perl -pe 's/^\s*// and s/\s*$// and s/\s/_/g')
 
 if ! [ $IMPORTSEQ -eq 0 ]; then
   echo "importing sequences"
-  perl $EIDIR/core/import_sequences.pl $DEFAULTINI $INI $OVERINI &> >(tee log/import_sequences.err)
+  perl $EIDIR/core/import_sequences.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/import_sequences.err)
 fi
 
 if ! [ $PREPAREGFF -eq 0 ]; then
   echo "preparing gff"
-  perl $EIDIR/core/prepare_gff.pl $DEFAULTINI $INI $OVERINI &> >(tee log/prepare_gff.err)
+  perl $EIDIR/core/prepare_gff.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/prepare_gff.err)
 fi
 
 if ! [ $IMPORTGENE -eq 0 ]; then
   echo "importing gene models"
-  # make list of alt ini files
-  ALTINI=""
-  for file in $CONFDIR/$DATABASE.*.ini
-  do
-    if ! [[ $file == *"blastpinterpro"* ]]; then
-      if ! [[ $file == *"cegmabusco"* ]]; then
-        ALTINI="$ALTINI $file"
-      fi
-    fi
-  done
-  perl $EIDIR/core/import_gene_models.pl $DEFAULTINI $INI $ALTINI $OVERINI &> >(tee log/import_gene_models.err)
+  perl $EIDIR/core/import_gene_models.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/import_gene_models.err)
 fi
 
 if ! [ $VERIFY -eq 0 ]; then
   echo "verifying import"
-  perl $EIDIR/core/verify_translations.pl $DEFAULTINI $INI $OVERINI &> >(tee log/verify_translations.err)
+  perl $EIDIR/core/verify_translations.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/verify_translations.err)
   cat summary/verify_translations.log >> log/verify_translations.err
 fi
 
@@ -114,8 +108,8 @@ if ! [ $IMPORTBLAST -eq 0 ]; then
 [XREF]
   BLASTP = [ 2000 Uniprot/swissprot/TrEMBL UniProtKB/TrEMBL ]\n" > $BLASTPINI
   fi
-  perl $EIDIR/core/import_blastp.pl $DEFAULTINI $INI $BLASTPINI $OVERINI &> >(tee log/import_blastp.err)
-  perl $EIDIR/core/import_interproscan.pl $DEFAULTINI $INI $BLASTPINI $OVERINI &> >(tee log/import_interproscan.err)
+  perl $EIDIR/core/import_blastp.pl $DEFAULTINI $DBINI $BLASTPINI $OVERINI &> >(tee log/import_blastp.err)
+  perl $EIDIR/core/import_interproscan.pl $DEFAULTINI $DBINI $BLASTPINI $OVERINI &> >(tee log/import_interproscan.err)
 fi
 
 if ! [ $IMPORTRM -eq 0 ]; then
@@ -125,7 +119,7 @@ if ! [ $IMPORTRM -eq 0 ]; then
     # create ini file to fetch result files from download directory
     printf "[FILES]\n  REPEATMASKER = [ txt $DOWNLOADDIR/repeats/${ASSEMBLY}.scaffolds.fa.repeatmasker.out.gz ]\n" > $RMINI
   fi
-  perl $EIDIR/core/import_repeatmasker.pl $DEFAULTINI $INI $RMINI $OVERINI &> >(tee log/import_repeatmasker.err)
+  perl $EIDIR/core/import_repeatmasker.pl $DEFAULTINI $DBINI $RMINI $OVERINI &> >(tee log/import_repeatmasker.err)
 fi
 
 if ! [ $IMPORTCEG -eq 0 ]; then
@@ -137,7 +131,7 @@ if ! [ $IMPORTCEG -eq 0 ]; then
   CEGMA = [ txt $DOWNLOADDIR/cegma/${ASSEMBLY}.scaffolds.fa.cegma.completeness_report.txt ]
   BUSCO = [ txt $DOWNLOADDIR/busco/${ASSEMBLY}.scaffolds.fa.busco.short_summary.txt ]\n" > $CEGINI
   fi
-  perl $EIDIR/core/import_cegma_busco.pl $DEFAULTINI $INI $CEGINI $OVERINI &> >(tee log/import_cegma_busco.err)
+  perl $EIDIR/core/import_cegma_busco.pl $DEFAULTINI $DBINI $CEGINI $OVERINI &> >(tee log/import_cegma_busco.err)
 fi
 
 if ! [ $EXPORTSEQ -eq 0 ]; then
@@ -145,7 +139,7 @@ if ! [ $EXPORTSEQ -eq 0 ]; then
   if ! [ -d $DOWNLOADDIR/sequence ]; then
     mkdir -p $DOWNLOADDIR/sequence
   fi
-  perl $EIDIR/core/export_sequences.pl $DEFAULTINI $INI $OVERINI &> >(tee log/export_sequences.err)
+  perl $EIDIR/core/export_sequences.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/export_sequences.err)
   cd exported
   LIST=`ls ${ASSEMBLY}.{scaffolds,cds,proteins}.fa`
   echo "$LIST"
@@ -172,7 +166,7 @@ if ! [ $EXPORTJSON -eq 0 ]; then
     mkdir -p $DOWNLOADDIR/json/assemblies
     mkdir -p $DOWNLOADDIR/json/meta
   fi
-  perl $EIDIR/core/export_json.pl $DEFAULTINI $INI $OVERINI &> >(tee log/export_json.err)
+  perl $EIDIR/core/export_json.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/export_json.err)
   echo "done"
   mv web/*.codon-usage.json $DOWNLOADDIR/json/annotations
   mv web/*.assembly-stats.json $DOWNLOADDIR/json/assemblies
@@ -185,7 +179,7 @@ if ! [ $EXPORTEMBL -eq 0 ]; then
   if ! [ -d $DOWNLOADDIR/embl ]; then
     mkdir -p $DOWNLOADDIR/embl
   fi
-  perl $EIDIR/core/export_embl.pl $DEFAULTINI $INI $OVERINI &> >(tee log/export_embl.err)
+  perl $EIDIR/core/export_embl.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/export_embl.err)
   gzip exported/*.embl
   mv exported/*.gz $DOWNLOADDIR/embl/
   rm -rf exported
@@ -194,7 +188,7 @@ fi
 
 if ! [ $INDEX -eq 0 ]; then
   echo "indexing database"
-  perl $EIDIR/core/index_database.pl $DEFAULTINI $INI $OVERINI &> >(tee log/index_database.err)
+  perl $EIDIR/core/index_database.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/index_database.err)
 fi
 
 cd ../
