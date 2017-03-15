@@ -15,12 +15,12 @@ IMPORTRM=0
 IMPORTCEG=0
 EXPORTJSON=0
 EXPORTSEQ=0
-EXPORTEMBL=0
+EXPORTFEATURES=0
 INDEX=0
 DEFAULTINI="$CONFDIR/default.ini"
 OVERINI="$CONFDIR/overwrite.ini"
 
-while getopts "spgvbrcjeiEd:o:" OPTION
+while getopts "spgvbrcjefid:o:" OPTION
 do
   case $OPTION in
     s)  IMPORTSEQ=1;;      # import_sequences.pl
@@ -32,7 +32,7 @@ do
     c)  IMPORTCEG=1;;      # import_cegma_busco.pl
     e)  EXPORTSEQ=1;;      # export_sequences.pl
     j)  EXPORTJSON=1;;     # export_json.pl
-    E)  EXPORTEMBL=1;;     # export_embl.pl
+    f)  EXPORTFEATURES=1;; # export_features.pl
     i)  INDEX=1;;          # index_database.pl
     d)  DATABASE=$OPTARG;; # core database name
   esac
@@ -174,12 +174,12 @@ if ! [ $EXPORTJSON -eq 0 ]; then
   rm -rf web
 fi
 
-if ! [ $EXPORTEMBL -eq 0 ]; then
+if ! [ $EXPORTFEATURES -eq 0 ]; then
   echo "exporting embl"
   if ! [ -d $DOWNLOADDIR/embl ]; then
     mkdir -p $DOWNLOADDIR/embl
   fi
-  perl $EIDIR/core/export_embl.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/export_embl.err)
+  perl $EIDIR/core/export_features.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/export_features.err)
   gzip exported/*.embl
   mv exported/*.gz $DOWNLOADDIR/embl/
   rm -rf exported

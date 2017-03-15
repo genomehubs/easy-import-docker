@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y parallel
 
 WORKDIR /ensembl
 USER eguser
-ARG cachebuster=0b162dfc1
+ARG cachebuster=0b162dfa4
 RUN git clone -b develop --recursive https://github.com/genomehubs/easy-import
 
 USER root
@@ -34,7 +34,5 @@ WORKDIR data
 
 ENV PERL5LIB $PERL5LIB:/ensembl/easy-import/modules
 ENV PERL5LIB $PERL5LIB:/ensembl/easy-import/gff-parser
-
-COPY export_embl.pl /ensembl/easy-import/core/
 
 CMD /import/startup.sh $FLAGS
