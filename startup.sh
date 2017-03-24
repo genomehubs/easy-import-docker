@@ -6,6 +6,7 @@ DOWNLOADDIR=/import/download
 BLASTDIR=/import/blast
 CONFDIR=/import/conf
 DATADIR=/import/data
+UPDATEMETA=0
 IMPORTSEQ=0
 PREPAREGFF=0
 IMPORTGENE=0
@@ -20,10 +21,11 @@ INDEX=0
 DEFAULTINI="$CONFDIR/default.ini"
 OVERINI="$CONFDIR/overwrite.ini"
 
-while getopts "spgvbrcjefid:o:" OPTION
+while getopts "supgvbrcjefid:o:" OPTION
 do
   case $OPTION in
     s)  IMPORTSEQ=1;;      # import_sequences.pl
+    u)  UPDATEMETA=1;;     # update_meta.pl
     p)  PREPAREGFF=1;;     # prepare_gff.pl
     g)  IMPORTGENE=1;;     # import_gene_models.pl
     v)  VERIFY=1;;         # verify_translations.pl
@@ -79,6 +81,11 @@ ASSEMBLY=${DISPLAY_NAME}_$(awk -F "=" '/ASSEMBLY.DEFAULT/ {print $2}' $DBINI | p
 if ! [ $IMPORTSEQ -eq 0 ]; then
   echo "importing sequences"
   perl $EIDIR/core/import_sequences.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/import_sequences.err)
+fi
+
+if ! [ $UPDATEMETA -eq 0 ]; then
+  echo "updating meta table"
+  perl $EIDIR/core/update_meta.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/update_meta.err)
 fi
 
 if ! [ $PREPAREGFF -eq 0 ]; then
@@ -176,12 +183,12 @@ fi
 
 if ! [ $EXPORTFEATURES -eq 0 ]; then
   echo "exporting embl"
-  if ! [ -d $DOWNLOADDIR/embl ]; then
-    mkdir -p $DOWNLOADDIR/embl
+  if ! [ -d $DOWNLOADDIR/features ]; then
+    mkdir -p $DOWNLOADDIR/features
   fi
   perl $EIDIR/core/export_features.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/export_features.err)
-  gzip exported/*.embl
-  mv exported/*.gz $DOWNLOADDIR/embl/
+  gzip exported/*.{embl,gff3}
+  mv exported/*.gz $DOWNLOADDIR/features/
   rm -rf exported
   echo "done"
 fi
