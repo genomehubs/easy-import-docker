@@ -124,7 +124,7 @@ if ! [ $IMPORTRM -eq 0 ]; then
   RMINI="$CONFDIR/$DATABASE.repeatmasker.ini"
   if ! [ -s $RMINI ]; then
     # create ini file to fetch result files from download directory
-    printf "[FILES]\n  REPEATMASKER = [ txt $DOWNLOADDIR/repeats/${ASSEMBLY}.scaffolds.fa.repeatmasker.out.gz ]\n" > $RMINI
+    printf "[FILES]\n  REPEATMASKER = [ txt $DOWNLOADDIR/repeatmasker/${ASSEMBLY}.scaffolds.fa.repeatmasker.out.gz ]\n" > $RMINI
   fi
   perl $EIDIR/core/import_repeatmasker.pl $DEFAULTINI $DBINI $RMINI $OVERINI &> >(tee log/import_repeatmasker.err)
 fi
