@@ -159,7 +159,7 @@ if ! [ $EXPORTSEQ -eq 0 ]; then
     cp exported/${ASSEMBLY}.proteins.fa $BLASTDIR
   fi
   echo "$LIST" | parallel perl -p -i -e '"s/^>(\S+)\s(\S+)\s(\S+)/>\${2}__\${3}__\$1/"' $BLASTDIR/{}
-  rename "s/.scaffolds./_scaffolds./; s/.cds./_cds./; s/.proteins./_proteins./" $BLASTDIR/*.{scaffolds,cds,proteins}.fa
+  rename -f "s/\.scaffolds\./_scaffolds./; s/\.cds\./_cds./; s/\.proteins\./_proteins./" $BLASTDIR/*.{scaffolds,cds,proteins}.fa
   gzip exported/*.fa
   mv exported/*.gz $DOWNLOADDIR/sequence/
 #  rm -rf exported
