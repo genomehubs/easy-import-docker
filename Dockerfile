@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y parallel
 
 WORKDIR /ensembl
 USER eguser
-ARG cachebuster=0b7a248c4
+ARG cachebuster=0b7a248c7
 RUN git clone -b develop --recursive https://github.com/genomehubs/easy-import
 
 USER root
