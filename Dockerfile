@@ -1,5 +1,5 @@
 # DOCKER-VERSION 1.12.3
-FROM genomehubs/easy-mirror:latest
+FROM genomehubs/easy-mirror:18.10
 MAINTAINER  Richard Challis/Lepbase contact@lepbase.org
 
 ENV TERM xterm
@@ -11,12 +11,12 @@ RUN cpanm Tree::DAG_Node \
         Text::LevenshteinXS \
         Math::SigFigs
 
-RUN apt-get update && apt-get install -y parallel
+RUN apt-get update && apt-get install -y parallel rename
 
 WORKDIR /ensembl
 USER eguser
-ARG cachebuster=0b7a248c7
-RUN git clone -b develop --recursive https://github.com/genomehubs/easy-import
+ARG cachebuster=2a7a23ec9
+RUN git clone -b 18.10 --recursive https://github.com/genomehubs/easy-import
 
 USER root
 RUN mkdir /import

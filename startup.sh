@@ -110,8 +110,8 @@ if ! [ $IMPORTBLAST -eq 0 ]; then
   if ! [ -s $BLASTPINI ]; then
     # create ini file to fetch result files from download directory
     printf "[FILES]
-  BLASTP = [ BLASTP $DOWNLOADDIR/blastp/${ASSEMBLY}.proteins.fa.blastp.uniprot_sprot.1e-10.tsv.gz ]
-  IPRSCAN = [ IPRSCAN $DOWNLOADDIR/interproscan/${ASSEMBLY}.proteins.fa.interproscan.tsv.gz ]
+  BLASTP = [ BLASTP $DOWNLOADDIR/${ASSEMBLY}/blastp/${ASSEMBLY}.proteins.fa.blastp.uniprot_sprot.1e-10.tsv.gz ]
+  IPRSCAN = [ IPRSCAN $DOWNLOADDIR/${ASSEMBLY}/interproscan/${ASSEMBLY}.proteins.fa.interproscan.tsv.gz ]
 [XREF]
   BLASTP = [ 2000 Uniprot/swissprot/TrEMBL UniProtKB/TrEMBL ]\n" > $BLASTPINI
   fi
@@ -124,7 +124,7 @@ if ! [ $IMPORTRM -eq 0 ]; then
   RMINI="$CONFDIR/$DATABASE.repeatmasker.ini"
   if ! [ -s $RMINI ]; then
     # create ini file to fetch result files from download directory
-    printf "[FILES]\n  REPEATMASKER = [ txt $DOWNLOADDIR/repeatmasker/${ASSEMBLY}.scaffolds.fa.repeatmasker.out.gz ]\n" > $RMINI
+    printf "[FILES]\n  REPEATMASKER = [ txt $DOWNLOADDIR/${ASSEMBLY}/repeatmasker/${ASSEMBLY}.scaffolds.fa.repeatmasker.out.gz ]\n" > $RMINI
   fi
   perl $EIDIR/core/import_repeatmasker.pl $DEFAULTINI $DBINI $RMINI $OVERINI &> >(tee log/import_repeatmasker.err)
 fi
@@ -135,34 +135,36 @@ if ! [ $IMPORTCEG -eq 0 ]; then
   if ! [ -s $CEGINI ]; then
     # create ini file to fetch result files from download directory
     printf "[FILES]
-  CEGMA = [ txt $DOWNLOADDIR/cegma/${ASSEMBLY}.scaffolds.fa.cegma.completeness_report.txt ]
-  BUSCO = [ txt $DOWNLOADDIR/busco/${ASSEMBLY}.scaffolds.fa.busco.short_summary.txt ]\n" > $CEGINI
+  CEGMA = [ txt $DOWNLOADDIR/${ASSEMBLY}/cegma/${ASSEMBLY}.scaffolds.fa.cegma.completeness_report.txt ]
+  BUSCO = [ txt $DOWNLOADDIR/${ASSEMBLY}/busco/${ASSEMBLY}.scaffolds.fa.busco.short_summary.txt ]\n" > $CEGINI
   fi
   perl $EIDIR/core/import_cegma_busco.pl $DEFAULTINI $DBINI $CEGINI $OVERINI &> >(tee log/import_cegma_busco.err)
 fi
 
 if ! [ $EXPORTSEQ -eq 0 ]; then
   echo "exporting sequences"
-  if ! [ -d $DOWNLOADDIR/sequence ]; then
-    mkdir -p $DOWNLOADDIR/sequence
-  fi
+  mkdir -p $DOWNLOADDIR/${ASSEMBLY}/fasta/dna
+  mkdir -p $DOWNLOADDIR/${ASSEMBLY}/fasta/cds
+  mkdir -p $DOWNLOADDIR/${ASSEMBLY}/fasta/pep
   perl $EIDIR/core/export_sequences.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/export_sequences.err)
   cd exported
   LIST=`ls ${ASSEMBLY}.{scaffolds,cds,proteins}.fa`
   echo "$LIST"
   cd ../
   cp exported/${ASSEMBLY}.scaffolds.fa $BLASTDIR
+  gzip -c exported/${ASSEMBLY}.scaffolds.fa > $DOWNLOADDIR/${ASSEMBLY}/fasta/dna/${ASSEMBLY}.scaffolds.fa.gz
   if [ -s exported/${ASSEMBLY}.cds.fa ]; then
     cp exported/${ASSEMBLY}.cds.fa $BLASTDIR
+    gzip -c exported/${ASSEMBLY}.cds.fa > $DOWNLOADDIR/${ASSEMBLY}/fasta/cds/${ASSEMBLY}.cds.fa.gz
+    gzip -c exported/${ASSEMBLY}.cds_translationid.fa > $DOWNLOADDIR/${ASSEMBLY}/fasta/cds/${ASSEMBLY}.cds_translationid.fa.gz
   fi
   if [ -s exported/${ASSEMBLY}.proteins.fa ]; then
     cp exported/${ASSEMBLY}.proteins.fa $BLASTDIR
+    gzip -c exported/${ASSEMBLY}.proteins.fa > $DOWNLOADDIR/${ASSEMBLY}/fasta/pep/${ASSEMBLY}.proteins.fa.gz
   fi
   echo "$LIST" | parallel perl -p -i -e '"s/^>(\S+)\s(\S+)\s(\S+)/>\${2}__\${3}__\$1/"' $BLASTDIR/{}
   rename -f "s/\.scaffolds\./_scaffolds./; s/\.cds\./_cds./; s/\.proteins\./_proteins./" $BLASTDIR/*.{scaffolds,cds,proteins}.fa
-  gzip exported/*.fa
-  mv exported/*.gz $DOWNLOADDIR/sequence/
-#  rm -rf exported
+  rm exported/*.fa
 fi
 
 if ! [ $EXPORTJSON -eq 0 ]; then
@@ -171,24 +173,24 @@ if ! [ $EXPORTJSON -eq 0 ]; then
     mkdir -p $DOWNLOADDIR/json
     mkdir -p $DOWNLOADDIR/json/annotations
     mkdir -p $DOWNLOADDIR/json/assemblies
-    mkdir -p $DOWNLOADDIR/json/meta
   fi
   perl $EIDIR/core/export_json.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/export_json.err)
   echo "done"
-  mv web/*.codon-usage.json $DOWNLOADDIR/json/annotations
-  mv web/*.assembly-stats.json $DOWNLOADDIR/json/assemblies
-  mv web/*.meta.json $DOWNLOADDIR/json/meta
+  mv web/*.codon-usage.json $DOWNLOADDIR/json/annotations/
+  mv web/*.assembly-stats.json $DOWNLOADDIR/json/assemblies/
+  mkdir -p $DOWNLOADDIR/${ASSEMBLY}/json
+  mv web/*.meta.json $DOWNLOADDIR/${ASSEMBLY}/json/
   rm -rf web
 fi
 
 if ! [ $EXPORTFEATURES -eq 0 ]; then
   echo "exporting embl"
-  if ! [ -d $DOWNLOADDIR/features ]; then
-    mkdir -p $DOWNLOADDIR/features
-  fi
   perl $EIDIR/core/export_features.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/export_features.err)
   gzip exported/*.{embl,gff3}
-  mv exported/*.gz $DOWNLOADDIR/features/
+  mkdir -p $DOWNLOADDIR/${ASSEMBLY}/embl
+  mkdir -p $DOWNLOADDIR/${ASSEMBLY}/gff
+  mv exported/*.embl.gz $DOWNLOADDIR/${ASSEMBLY}/embl/
+  mv exported/*.gff3.gz $DOWNLOADDIR/${ASSEMBLY}/gff/
   rm -rf exported
   echo "done"
 fi
