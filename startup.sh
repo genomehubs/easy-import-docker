@@ -143,12 +143,14 @@ fi
 
 if ! [ $EXPORTSEQ -eq 0 ]; then
   echo "exporting sequences"
-  mkdir -p $DOWNLOADDIR/${ASSEMBLY}/fasta/dna
+  mkdir -p $DOWNLOADDIR/${ASSEMBLY}/fasta/cdna
   mkdir -p $DOWNLOADDIR/${ASSEMBLY}/fasta/cds
+  mkdir -p $DOWNLOADDIR/${ASSEMBLY}/fasta/dna
+  mkdir -p $DOWNLOADDIR/${ASSEMBLY}/fasta/gene
   mkdir -p $DOWNLOADDIR/${ASSEMBLY}/fasta/pep
   perl $EIDIR/core/export_sequences.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/export_sequences.err)
   cd exported
-  LIST=`ls ${ASSEMBLY}.{scaffolds,cds,proteins}.fa`
+  LIST=`ls ${ASSEMBLY}.{scaffolds,cdna,cds,gene,proteins}.fa`
   echo "$LIST"
   cd ../
   cp exported/${ASSEMBLY}.scaffolds.fa $BLASTDIR
@@ -158,12 +160,20 @@ if ! [ $EXPORTSEQ -eq 0 ]; then
     gzip -c exported/${ASSEMBLY}.cds.fa > $DOWNLOADDIR/${ASSEMBLY}/fasta/cds/${ASSEMBLY}.cds.fa.gz
     gzip -c exported/${ASSEMBLY}.cds_translationid.fa > $DOWNLOADDIR/${ASSEMBLY}/fasta/cds/${ASSEMBLY}.cds_translationid.fa.gz
   fi
+  if [ -s exported/${ASSEMBLY}.cdna.fa ]; then
+    cp exported/${ASSEMBLY}.cdna.fa $BLASTDIR
+    gzip -c exported/${ASSEMBLY}.cdna.fa > $DOWNLOADDIR/${ASSEMBLY}/fasta/cdna/${ASSEMBLY}.cdna.fa.gz
+  fi
+  if [ -s exported/${ASSEMBLY}.gene.fa ]; then
+    cp exported/${ASSEMBLY}.gene.fa $BLASTDIR/${ASSEMBLY}.genes.fa
+    gzip -c exported/${ASSEMBLY}.gene.fa > $DOWNLOADDIR/${ASSEMBLY}/fasta/gene/${ASSEMBLY}.genes.fa.gz
+  fi
   if [ -s exported/${ASSEMBLY}.proteins.fa ]; then
     cp exported/${ASSEMBLY}.proteins.fa $BLASTDIR
     gzip -c exported/${ASSEMBLY}.proteins.fa > $DOWNLOADDIR/${ASSEMBLY}/fasta/pep/${ASSEMBLY}.proteins.fa.gz
   fi
-  echo "$LIST" | parallel perl -p -i -e '"s/^>(\S+)\s(\S+)\s(\S+)/>\${2}__\${3}__\$1/"' $BLASTDIR/{}
-  rename -f "s/\.scaffolds\./_scaffolds./; s/\.cds\./_cds./; s/\.proteins\./_proteins./" $BLASTDIR/*.{scaffolds,cds,proteins}.fa
+  perl -p -i -e 's/^>(\S+)\s(\S+)\s(\S+)/>${2}__${3}__$1/' $BLASTDIR/*
+  rename -f "s/\.scaffolds\./_scaffolds./; s/\.cds\./_cds./; s/\.cdna\./_cdna./; s/\.genes\./_genes./; s/\.proteins\./_proteins./" $BLASTDIR/*.{scaffolds,cds,cdna,genes,proteins}.fa
   rm exported/*.fa
 fi
 

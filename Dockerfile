@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y parallel rename
 
 WORKDIR /ensembl
 USER eguser
-ARG cachebuster=2a7a23ec9
+ARG cachebuster=477adbe49
 RUN git clone -b 18.10 --recursive https://github.com/genomehubs/easy-import
 
 USER root
@@ -25,11 +25,11 @@ RUN chown -R eguser /import
 
 USER eguser
 WORKDIR /import
-RUN mkdir blast
-RUN mkdir conf
-RUN mkdir download
-RUN mkdir meta
-RUN mkdir data
+RUN mkdir blast && \
+    mkdir conf && \
+    mkdir download && \
+    mkdir meta && \
+    mkdir data
 WORKDIR data
 
 ENV PERL5LIB $PERL5LIB:/ensembl/easy-import/modules
