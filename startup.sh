@@ -110,8 +110,8 @@ if ! [ $IMPORTBLAST -eq 0 ]; then
   if ! [ -s $BLASTPINI ]; then
     # create ini file to fetch result files from download directory
     printf "[FILES]
-  BLASTP = [ BLASTP $DOWNLOADDIR/blastp/${ASSEMBLY}.proteins.fa.blastp.uniprot_sprot.1e-10.tsv.gz ]
-  IPRSCAN = [ IPRSCAN $DOWNLOADDIR/interproscan/${ASSEMBLY}.proteins.fa.interproscan.tsv.gz ]
+  BLASTP = [ BLASTP $DOWNLOADDIR/${ASSEMBLY}/blastp/${ASSEMBLY}.proteins.fa.blastp.uniprot_sprot.1e-10.tsv.gz ]
+  IPRSCAN = [ IPRSCAN $DOWNLOADDIR/${ASSEMBLY}/interproscan/${ASSEMBLY}.proteins.fa.interproscan.tsv.gz ]
 [XREF]
   BLASTP = [ 2000 Uniprot/swissprot/TrEMBL UniProtKB/TrEMBL ]\n" > $BLASTPINI
   fi
@@ -124,7 +124,7 @@ if ! [ $IMPORTRM -eq 0 ]; then
   RMINI="$CONFDIR/$DATABASE.repeatmasker.ini"
   if ! [ -s $RMINI ]; then
     # create ini file to fetch result files from download directory
-    printf "[FILES]\n  REPEATMASKER = [ txt $DOWNLOADDIR/repeatmasker/${ASSEMBLY}.scaffolds.fa.repeatmasker.out.gz ]\n" > $RMINI
+    printf "[FILES]\n  REPEATMASKER = [ txt $DOWNLOADDIR/${ASSEMBLY}/repeatmasker/${ASSEMBLY}.scaffolds.fa.repeatmasker.out.gz ]\n" > $RMINI
   fi
   perl $EIDIR/core/import_repeatmasker.pl $DEFAULTINI $DBINI $RMINI $OVERINI &> >(tee log/import_repeatmasker.err)
 fi
@@ -135,8 +135,8 @@ if ! [ $IMPORTCEG -eq 0 ]; then
   if ! [ -s $CEGINI ]; then
     # create ini file to fetch result files from download directory
     printf "[FILES]
-  CEGMA = [ txt $DOWNLOADDIR/cegma/${ASSEMBLY}.scaffolds.fa.cegma.completeness_report.txt ]
-  BUSCO = [ txt $DOWNLOADDIR/busco/${ASSEMBLY}.scaffolds.fa.busco.short_summary.txt ]\n" > $CEGINI
+  CEGMA = [ txt $DOWNLOADDIR/${ASSEMBLY}/cegma/${ASSEMBLY}.scaffolds.fa.cegma.completeness_report.txt ]
+  BUSCO = [ txt $DOWNLOADDIR/${ASSEMBLY}/busco/${ASSEMBLY}.scaffolds.fa.busco.short_summary.txt ]\n" > $CEGINI
   fi
   perl $EIDIR/core/import_cegma_busco.pl $DEFAULTINI $DBINI $CEGINI $OVERINI &> >(tee log/import_cegma_busco.err)
 fi
@@ -183,12 +183,14 @@ fi
 
 if ! [ $EXPORTFEATURES -eq 0 ]; then
   echo "exporting embl"
-  if ! [ -d $DOWNLOADDIR/features ]; then
-    mkdir -p $DOWNLOADDIR/features
+  if ! [ -d $DOWNLOADDIR/${ASSEMBLY}/gff3 ]; then
+    mkdir -p $DOWNLOADDIR/${ASSEMBLY}/gff3
+    mkdir -p $DOWNLOADDIR/${ASSEMBLY}/embl
   fi
   perl $EIDIR/core/export_features.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/export_features.err)
   gzip exported/*.{embl,gff3}
-  mv exported/*.gz $DOWNLOADDIR/features/
+  mv exported/*.gff3.gz $DOWNLOADDIR/${ASSEMBLY}/gff3/
+  mv exported/*.embl.gz $DOWNLOADDIR/${ASSEMBLY}/embl/
   rm -rf exported
   echo "done"
 fi

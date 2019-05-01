@@ -1,5 +1,5 @@
 # DOCKER-VERSION 1.12.3
-FROM genomehubs/easy-mirror:latest
+FROM genomehubs/easy-mirror:18.10.1
 MAINTAINER  Richard Challis/Lepbase contact@lepbase.org
 
 ENV TERM xterm
