@@ -1,5 +1,5 @@
 # DOCKER-VERSION 1.12.3
-FROM genomehubs/easy-mirror:18.10.1
+FROM genomehubs/easy-mirror:19.05
 MAINTAINER  Richard Challis/Lepbase contact@lepbase.org
 
 ENV TERM xterm
@@ -15,8 +15,8 @@ RUN apt-get update && apt-get install -y parallel
 
 WORKDIR /ensembl
 USER eguser
-ARG cachebuster=0b7a248c7
-RUN git clone -b develop --recursive https://github.com/genomehubs/easy-import
+ARG cachebuster=047a2c3c8
+RUN git clone -b 18.10 --recursive https://github.com/genomehubs/easy-import
 
 USER root
 RUN mkdir /import

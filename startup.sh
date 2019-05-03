@@ -143,8 +143,12 @@ fi
 
 if ! [ $EXPORTSEQ -eq 0 ]; then
   echo "exporting sequences"
-  if ! [ -d $DOWNLOADDIR/sequence ]; then
-    mkdir -p $DOWNLOADDIR/sequence
+  if ! [ -d $DOWNLOADDIR/${ASSEMBLY}/fasta ]; then
+    mkdir -p $DOWNLOADDIR/${ASSEMBLY}/fasta/cdna
+    mkdir -p $DOWNLOADDIR/${ASSEMBLY}/fasta/cds
+    mkdir -p $DOWNLOADDIR/${ASSEMBLY}/fasta/dna
+    mkdir -p $DOWNLOADDIR/${ASSEMBLY}/fasta/gene
+    mkdir -p $DOWNLOADDIR/${ASSEMBLY}/fasta/pep
   fi
   perl $EIDIR/core/export_sequences.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/export_sequences.err)
   cd exported
@@ -161,7 +165,11 @@ if ! [ $EXPORTSEQ -eq 0 ]; then
   echo "$LIST" | parallel perl -p -i -e '"s/^>(\S+)\s(\S+)\s(\S+)/>\${2}__\${3}__\$1/"' $BLASTDIR/{}
   rename -f "s/\.scaffolds\./_scaffolds./; s/\.cds\./_cds./; s/\.proteins\./_proteins./" $BLASTDIR/*.{scaffolds,cds,proteins}.fa
   gzip exported/*.fa
-  mv exported/*.gz $DOWNLOADDIR/sequence/
+  mv exported/*.cdna.fa.gz $DOWNLOADDIR/${ASSEMBLY}/fasta/cdna/
+  mv exported/*.cds*fa.gz $DOWNLOADDIR/${ASSEMBLY}/fasta/cds/
+  mv exported/*.scaffolds.fa.gz $DOWNLOADDIR/${ASSEMBLY}/fasta/dna/
+  mv exported/*.gene.fa.gz $DOWNLOADDIR/${ASSEMBLY}/fasta/gene/
+  mv exported/*.proteins.fa.gz $DOWNLOADDIR/${ASSEMBLY}/fasta/pep/
 #  rm -rf exported
 fi
 
