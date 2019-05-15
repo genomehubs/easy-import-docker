@@ -11,12 +11,12 @@ RUN cpanm Tree::DAG_Node \
         Text::LevenshteinXS \
         Math::SigFigs
 
-RUN apt-get update && apt-get install -y parallel
+RUN apt-get update && apt-get install -y parallel rename
 
 WORKDIR /ensembl
 USER eguser
 ARG cachebuster=047a2c3c8
-RUN git clone -b 18.10 --recursive https://github.com/genomehubs/easy-import
+RUN git clone -b 19.05 --recursive https://github.com/genomehubs/easy-import
 
 USER root
 RUN mkdir /import

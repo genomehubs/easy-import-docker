@@ -152,19 +152,19 @@ if ! [ $EXPORTSEQ -eq 0 ]; then
   fi
   perl $EIDIR/core/export_sequences.pl $DEFAULTINI $DBINI $OVERINI &> >(tee log/export_sequences.err)
   cd exported
-  LIST=`ls ${ASSEMBLY}.{scaffolds,cds,proteins}.fa`
+  LIST=`ls ${ASSEMBLY}.{scaffolds,cdna,cds,gene,proteins}.fa`
   echo "$LIST"
   cd ../
-  cp exported/${ASSEMBLY}.scaffolds.fa $BLASTDIR
-  if [ -s exported/${ASSEMBLY}.cds.fa ]; then
-    cp exported/${ASSEMBLY}.cds.fa $BLASTDIR
-  fi
-  if [ -s exported/${ASSEMBLY}.proteins.fa ]; then
-    cp exported/${ASSEMBLY}.proteins.fa $BLASTDIR
-  fi
-  echo "$LIST" | parallel perl -p -i -e '"s/^>(\S+)\s(\S+)\s(\S+)/>\${2}__\${3}__\$1/"' $BLASTDIR/{}
-  rename -f "s/\.scaffolds\./_scaffolds./; s/\.cds\./_cds./; s/\.proteins\./_proteins./" $BLASTDIR/*.{scaffolds,cds,proteins}.fa
-  gzip exported/*.fa
+  for TYPE in scaffolds cdna cds gene proteins; do
+    if [ -s exported/${ASSEMBLY}.${TYPE}.fa ]; then
+      rm -f $BLASTDIR/${ASSEMBLY}_${TYPE}.*
+      cp exported/${ASSEMBLY}.${TYPE}.fa $BLASTDIR
+    fi
+  done
+#  echo "$LIST" | parallel perl -p -i.bak -e '"s/^>(\S+)\s(\S+)\s(\S+)/>\${2}__\${3}__\$1/"' $BLASTDIR/{}
+  echo "$LIST" | parallel 'perl -p -i -e "s/^>(\S+)\s(\S+)\s(\S+)/>\$2---\$3---\$1/; s/---/__/g"' $BLASTDIR/{}
+  rename -f "s/\.scaffolds\./_scaffolds./; s/\.cdna\./_cdna./; s/\.cds\./_cds./; s/\.gene\./_gene./; s/\.proteins\./_proteins./" $BLASTDIR/*.{scaffolds,cdna,cds,gene,proteins}.fa
+  gzip -f exported/*.fa
   mv exported/*.cdna.fa.gz $DOWNLOADDIR/${ASSEMBLY}/fasta/cdna/
   mv exported/*.cds*fa.gz $DOWNLOADDIR/${ASSEMBLY}/fasta/cds/
   mv exported/*.scaffolds.fa.gz $DOWNLOADDIR/${ASSEMBLY}/fasta/dna/
